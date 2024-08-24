@@ -1,0 +1,113 @@
+[
+{
+	"uri": "//localhost:1313/",
+	"title": "HA-Scalable Architecture",
+	"tags": [],
+	"description": "",
+	"content": "Building a High Availability And scalable architecture with ASG and ELB Overall In this lab, you\u0026rsquo;ll learn how to build a HA and scalable architecture and apply stress test to see the performance differences.\nContent Introduction Stress test 1 server Stress test many servers Clean up resources "
+},
+{
+	"uri": "//localhost:1313/3-test-ha-multi-server/3.1-create-launch-template/",
+	"title": "Create launch template",
+	"tags": [],
+	"description": "",
+	"content": " From EC2 dashboard -\u0026gt; choose Instances -\u0026gt; choose the newly-created EC2 instance -\u0026gt; then we creat the launch template from this instance Enter \u0026ldquo;Launch template name\u0026rdquo; : \u0026quot; LT-ubuntu-with-application-NodeJS\u0026quot; In \u0026ldquo;Subnet\u0026rdquo;, choose \u0026ldquo;Don\u0026rsquo;t include in launch template\u0026rdquo;, and choose the existed security group created from cloudformation Enter the code into \u0026ldquo;User data\u0026rdquo; and click \u0026ldquo;Create launch template\u0026rdquo; . It will automatically run these commands when an EC2 instance is created. #!/bin/bash # Update the package list and install required packages sudo apt update sudo apt install -y git npm nodejs # Clone the repository git clone https://github.com/Phuc2003-vietnam/fcj-ha-architecture # Change directory to the cloned repository cd fcj-ha-architecture # Install the necessary npm packages npm install express # Run the Node.js application node index.js The successs response "
+},
+{
+	"uri": "//localhost:1313/1-introduce/",
+	"title": "Introduction",
+	"tags": [],
+	"description": "",
+	"content": "In early days, developers deployed their application by keeping everything on a single box (or a single EC2 instance if I were to do it in the cloud) as it seems to be the easiest way. The main issues with this approach are of course scale and availability. You can only support as many customers as your single box and should this single box fail, you won’t support any at all. And while these may not be your primary concerns in the early stages, as your system matures and your customer base grows, availability and scale will become more important.\nContent Little exercise before jump into HA-Scalable architecture "
+},
+{
+	"uri": "//localhost:1313/1-introduce/1.1-theproblem/",
+	"title": "Little exercise before jump into",
+	"tags": [],
+	"description": "",
+	"content": "Problem statement Let’s say that our business requirements call for 99.5% uptime and have the ability to serve high number of request at peak time with optimized cost. In other words, it is allowed to be down no more than 44 hours in any given 12-month period. The total availability of a system of sequentially connected components is the product of individual availabilities. Let’s for example assume that individual servers that host our web and application tiers have 90% availability and the server hosting our database has 99%. For simplicity’s sake, let’s also assume that these availability numbers include hardware, OS, software, and connectivity.\n"
+},
+{
+	"uri": "//localhost:1313/2-test-ha-1server/2.1-preparation/",
+	"title": "Preparation",
+	"tags": [],
+	"description": "",
+	"content": "Provided Cloudformation First, you need to download this cloudformation file : https://github.com/Phuc2003-vietnam/workshop1-cf/blob/main/one-server.yaml\nCreate stack Remember to create a key pair and do as following images. At the end click \u0026ldquo;Submit\u0026rdquo;\n"
+},
+{
+	"uri": "//localhost:1313/2-test-ha-1server/",
+	"title": "Stress test 1 server",
+	"tags": [],
+	"description": "",
+	"content": "In this part, you will create a stack with provided file and test how many request the server can process before going down by memory leaks.\nContent Preparation Testing "
+},
+{
+	"uri": "//localhost:1313/3-test-ha-multi-server/",
+	"title": "Stress test many servers",
+	"tags": [],
+	"description": "",
+	"content": "In this part, you will create a Auto Scaling Group with Elastic Load Balancer and test how many request the system can process before going down by memory leaks.\nRemember to run the cloudformation in part 2 first in order to proceed with following steps Content Preparation HA-Scalable architecture "
+},
+{
+	"uri": "//localhost:1313/3-test-ha-multi-server/3.2-create-tg/",
+	"title": "Create target group",
+	"tags": [],
+	"description": "",
+	"content": " From EC2 dashboard -\u0026gt; choose \u0026ldquo;Target Groups\u0026rdquo; -\u0026gt; choose \u0026ldquo;Create target group\u0026rdquo; Choose \u0026ldquo;Instances\u0026rdquo;, enter \u0026ldquo;TG-workshop1\u0026rdquo; for name and Port \u0026ldquo;3000\u0026rdquo; and choose the VPC we create from cloudformation and click \u0026ldquo;Next\u0026rdquo; Click the instance created from cloudformation and click \u0026ldquo;Include as pending below\u0026rdquo; then click \u0026ldquo;Create target group\u0026rdquo; "
+},
+{
+	"uri": "//localhost:1313/1-introduce/1.2-ha-scalable-architecture/",
+	"title": "HA-Scalable architecture",
+	"tags": [],
+	"description": "",
+	"content": "Definitions High avability: refers to the ability of a system or service to remain operational and accessible with minimal downtime. It is a key concept in systems design, especially for critical applications where uninterrupted service is crucial, e.g : banking, health care systems,\u0026hellip; Scalability: design approach that allows a system to handle increasing loads or demands efficiently without compromising performance or reliability. It ensures that as the volume of data, traffic, or transactions grows, the system can expand to meet these demands seamlessly. 3 tiers architecture As the system grows, we often split it into tiers (also known as layers), which sets it on the path of greater scale and availability. Now every tier can be placed on its own box of the appropriate size and cost. We can choose bigger, better boxes with multiple levels of hardware redundancy for our database servers and cheaper, commodity-grade hardware for our web and application servers.\nAdding redundancy server on webserver tier The simplest way to increase system availability is by adding redundancy. Horizontal scaling, which involves adding more web servers to the web tier, is generally easier and more efficient than vertical scaling. By distributing the load across multiple servers, the likelihood of a complete failure decreases. This approach not only improves the availability of the web tier but also enhances the overall reliability of the entire system.\nAdding even one extra server to the web tier brings its availability by 8%.\nAs you can see , when having 3 webservers , it only enhances the performance 0.8% in comparision to have 2 webservers because the avaibility in same tier increase logarithmically\nExpand redundancy to other tiers Let take another step and add more servers to our application server and master-slave DB where master DB is for write and slave DB is to be read from.\nThe architecture now is tightly coupled , we have to reinvent the architecture for scalability\nAdding load balancer or message queue As you can see from the above architecture, when adding, removing new application server or somehow the server is down, we have manualy edit code on web server to connect or disconnect that application server, also the workload on each application server may not be equally distributed, affecting the system overall performance.\nBy implementing a load balancer, you can create a more robust and scalable architecture, capable of handling varying workloads efficiently.\nOne may ask:\n\u0026ldquo;What about load balancer for Web Server?\u0026rdquo; : I think we can use DNS-based load balancing with round robin mechanism\n\u0026ldquo;If we only have 1 load balancer , can we consider it as single-point-failure architecture, as if load balancer is down , there is no way to forward request to application server\u0026rdquo;: Great question ! We may use a standby load balancer in this scenario for high availability\n\u0026ldquo;At any point of time, only one load balancer is serving all the requests. What if the number of incoming requests are too high?\u0026rdquo; : If the number requests is too high your will get timeouts and retry\n"
+},
+{
+	"uri": "//localhost:1313/2-test-ha-1server/2.2-testing/",
+	"title": "Testing",
+	"tags": [],
+	"description": "",
+	"content": " Now you checkout the IPv4 of your newly-created EC2 , in my case that is 174.129.184.42 Access https://loader.io and config as following image, remember to enter your EC2 IPv4 at port 3000, in my case that is 174.129.184.42:3000 (port 3000 as your application run on this port). SSH to your server and insert these commands (the image miss 2 last command) sudo apt update sudo apt install git npm nodejs git clone https://github.com/Phuc2003-vietnam/fcj-ha-architecture cd fcj-ha-architecture npm install express echo \u0026lt;verification_token\u0026gt; \u0026gt; loader.txt =\u0026gt; echo \u0026ldquo;loaderio-9a4748551499f812f4c74dbec54c5f4c5\u0026rdquo; \u0026gt; loader.txt node index.js Click \u0026ldquo;verify\u0026rdquo; and enter configure the test to 100 clients in 1 Min and click \u0026ldquo;Run test\u0026rdquo; The server is down due to memory leak while only serving 57 success request "
+},
+{
+	"uri": "//localhost:1313/3-test-ha-multi-server/3.4-create-elb/",
+	"title": "Create elastic load balancer",
+	"tags": [],
+	"description": "",
+	"content": " From EC2 dashboard -\u0026gt; choose \u0026ldquo;Load Balancers\u0026rdquo; -\u0026gt; choose \u0026ldquo;Create load balancer\u0026rdquo; Choose \u0026ldquo;Application Load Balancer\u0026rdquo; Enter name \u0026ldquo;LB-workshop1\u0026rdquo;, choose \u0026ldquo;VPCWithOneServer\u0026rdquo; and choose 2 subnets, choose the existed Security group, forward to \u0026ldquo;TG-workshop1\u0026rdquo; and click create "
+},
+{
+	"uri": "//localhost:1313/4-cleanup/",
+	"title": "Clean up resources",
+	"tags": [],
+	"description": "",
+	"content": "We will take the following steps to delete the resources we created in this exercise.\nRemove Auto Scaling Group: Access EC2 Management Console On the left navigation bar, select Auto Scaling Groups Select Auto Scaling Group related to the lab. Click Delete Remove Load Balancer Access EC2 Management Console On the left navigation bar, select Load Balancers Select Load Balancers related to the lab. Click Actions Click Delete Remove Target Group Access EC2 Management Console On the left navigation bar, select Target Groups Select Target Groups related to the lab. Click Actions Click Delete Delete Launch Template Access EC2 Management Console On the left navigation bar, select Launch Template: Select Launch Template related to the lab. Click Actions Click Delete template Delete Stack Access Cloudformation console Select the stack you created Click Delete "
+},
+{
+	"uri": "//localhost:1313/3-test-ha-multi-server/3.3-create-asg/",
+	"title": "Create auto scaling group",
+	"tags": [],
+	"description": "",
+	"content": " From EC2 dashboard -\u0026gt; choose \u0026ldquo;Auto Scaling Groups\u0026rdquo; -\u0026gt; enter \u0026ldquo;ASG-workshop1\u0026rdquo; as name, choose \u0026ldquo;LT-ubuntu-with-application-NodeJS\u0026rdquo; as template and \u0026ldquo;Next\u0026rdquo; Choose \u0026ldquo;VPCWithOneServer\u0026rdquo; and select 2 subnets and \u0026ldquo;Next\u0026rdquo; Click \u0026ldquo;Attach to an existing load balancer\u0026rdquo;, choose \u0026ldquo;TG-workshop1\u0026rdquo; Choose capacity like image, and \u0026ldquo;Target tracking scaling policy\u0026rdquo; with \u0026ldquo;Target value\u0026rdquo; of 20 Create Auto Scaling group and see the result v "
+},
+{
+	"uri": "//localhost:1313/3-test-ha-multi-server/3.5-testing/",
+	"title": "Testing",
+	"tags": [],
+	"description": "",
+	"content": " Now you checkout the \u0026ldquo;LB-workshop1\u0026rdquo; with DNS name and config to loader.io as follow, remember to ssh to 1 of the server and change loader.txt. As you can see, we have 3 instance in the target group Config the test as follow, and you can see the result with 97 sucess request in comparision to 57 sucess in last test When you enter the DNS name of load balancer, it uses round robin algorithm to route request to our instances in target group "
+},
+{
+	"uri": "//localhost:1313/categories/",
+	"title": "Categories",
+	"tags": [],
+	"description": "",
+	"content": ""
+},
+{
+	"uri": "//localhost:1313/tags/",
+	"title": "Tags",
+	"tags": [],
+	"description": "",
+	"content": ""
+}]
